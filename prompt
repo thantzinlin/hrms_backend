@@ -1,0 +1,116 @@
+Create a complete backend-only HRMS (Human Resource Management System) using Java Spring Boot and Microsoft SQL Server.
+
+TECH STACK:
+
+- Java 17
+- Spring Boot (latest)
+- Spring Security
+- JWT Authentication (Access + Refresh tokens)
+- JPA / Hibernate
+- Microsoft SQL Server
+- Maven
+- Lombok
+- Swagger / OpenAPI
+
+FEATURES:
+
+1. Authentication & Authorization
+
+- Login API
+- JWT-based authentication
+- BCrypt password hashing
+- Role-based access control (ADMIN, HR, MANAGER, EMPLOYEE)
+- JWT filter and security configuration
+
+2. Employee Management
+
+- CRUD APIs for employees
+- Employee profile linked to user account
+- Fields: employeeId, name, email, phone, department, position, joinDate, status
+
+3. Attendance Management
+
+- Daily check-in / check-out APIs
+- Prevent duplicate check-in per day
+- Calculate working hours
+- Attendance report APIs (by employee, date range)
+
+4. Overtime (OT) Management
+
+- OT request submission
+- Approval / rejection workflow
+- OT status: PENDING, APPROVED, REJECTED
+
+5. Leave Management
+
+- Leave request submission
+- Approval / rejection workflow
+- Leave balance calculation
+- Leave history
+
+6. Admin Management
+
+- Department CRUD
+- Holiday management
+- Role management
+
+7. Dashboard APIs
+
+- Total employees
+- Today attendance count
+- Pending leave count
+- Pending OT count
+
+ARCHITECTURE:
+
+- Controller → Service → Repository layers
+- DTOs for request/response
+- Global exception handling
+- Pagination and sorting
+
+DATABASE (MSSQL):
+
+- Use IDENTITY primary keys
+- Use DATETIME2 for dates
+- Define foreign keys and indexes
+
+EXTRA:
+
+- Seed admin user and roles
+- application.yml config
+- MSSQL schema scripts
+- README with setup steps
+
+OUTPUT:
+
+- Complete Spring Boot project source code
+- Folder structure
+- SQL schema
+- API endpoint list
+
+Read HRMS_Postman_Collection.json file and according to these api Create a frontend-only HRMS admin dashboard in this angular project I already setup angular and tailwind css
+
+REQUIREMENTS:
+
+- Authentication pages (Login)
+- Role-based route guards
+- Dashboard with summary cards
+- Employee management pages
+- Attendance pages (check-in/check-out & reports)
+- Leave request & approval pages
+- OT request & approval pages
+- Clean and modern UI
+- Angular services to consume REST APIs
+- Environment configuration for backend API URL
+
+ASSUME:
+
+- Backend APIs already exist
+- JWT-based authentication
+- RESTful endpoints
+
+OUTPUT:
+
+- Complete Angular project structure
+- Components, services, routing, guards
+- README instructions

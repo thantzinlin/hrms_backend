@@ -1,0 +1,56 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+logs/
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.bak
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE specific files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# User-specific files
+user_info.txt
+user_instruction.txt
+table-script.sql
+
+# Test and coverage reports
+/test-output/
+/build/
+/surefire-reports/
+/failsafe-reports/
+/jacoco/
+
+# Others
+*.bak
+*.swp
+*~
+*.orig
+*.rej
