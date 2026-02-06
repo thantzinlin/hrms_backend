@@ -1,5 +1,6 @@
 package com.hrms.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
 
@@ -20,5 +21,10 @@ public class UpdateEmployeeRequest {
 
     private Integer departmentId;
 
+    private Long positionId;
+
     private String position;
+
+    @JsonProperty("role")
+    private String roleName;
 }

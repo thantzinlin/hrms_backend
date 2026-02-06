@@ -1,0 +1,125 @@
+{
+  "description": "Position feature - sample request/response JSON for HRMS APIs",
+  "position": {
+    "create_request": {
+      "method": "POST",
+      "url": "/api/positions",
+      "body": {
+        "positionName": "Software Engineer",
+        "description": "Develops and maintains software applications",
+        "isActive": true
+      }
+    },
+    "create_response": {
+      "returnCode": "200",
+      "returnMessage": "Success",
+      "data": {
+        "positionId": 1,
+        "positionName": "Software Engineer",
+        "description": "Develops and maintains software applications",
+        "isActive": true
+      }
+    },
+    "get_all_response": {
+      "returnCode": "200",
+      "returnMessage": "Success",
+      "data": [
+        {
+          "positionId": 1,
+          "positionName": "Software Engineer",
+          "description": "Develops and maintains software applications",
+          "isActive": true
+        },
+        {
+          "positionId": 2,
+          "positionName": "HR Manager",
+          "description": "Manages human resources operations",
+          "isActive": true
+        }
+      ]
+    },
+    "get_by_id_response": {
+      "returnCode": "200",
+      "returnMessage": "Success",
+      "data": {
+        "positionId": 1,
+        "positionName": "Software Engineer",
+        "description": "Develops and maintains software applications",
+        "isActive": true
+      }
+    },
+    "update_request": {
+      "method": "PUT",
+      "url": "/api/positions/1",
+      "body": {
+        "positionName": "Senior Software Engineer",
+        "description": "Leads development of software applications",
+        "isActive": true
+      }
+    }
+  },
+  "employee_with_position": {
+    "create_request": {
+      "method": "POST",
+      "url": "/api/employees",
+      "body": {
+        "name": "Jane Doe",
+        "email": "jane.doe@example.com",
+        "phone": "555-123-4567",
+        "joinDate": "2024-01-15T09:00:00",
+        "status": "Active",
+        "username": "janedoe",
+        "password": "SecurePass123!",
+        "departmentId": 1,
+        "positionId": 1,
+        "role": "EMPLOYEE"
+      }
+    },
+    "create_request_legacy": {
+      "comment": "Backward compatible: use position name instead of positionId",
+      "body": {
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "555-987-6543",
+        "joinDate": "2024-01-10T09:00:00",
+        "status": "Active",
+        "username": "johndoe",
+        "password": "SecurePass123!",
+        "departmentId": 1,
+        "position": "Software Engineer",
+        "role": "EMPLOYEE"
+      }
+    },
+    "response": {
+      "returnCode": "200",
+      "returnMessage": "Success",
+      "data": {
+        "id": 1,
+        "employeeId": "EMP00001",
+        "name": "Jane Doe",
+        "email": "jane.doe@example.com",
+        "phone": "555-123-4567",
+        "joinDate": "2024-01-15T09:00:00",
+        "status": "Active",
+        "userId": "USR00001",
+        "departmentId": 1,
+        "departmentName": "Engineering",
+        "positionId": 1,
+        "position": "Software Engineer"
+      }
+    },
+    "update_request": {
+      "method": "PUT",
+      "url": "/api/employees/1",
+      "body": {
+        "name": "Jane Doe",
+        "email": "jane.doe@example.com",
+        "phone": "555-123-4567",
+        "joinDate": "2024-01-15T09:00:00",
+        "status": "Active",
+        "departmentId": 1,
+        "positionId": 2
+      }
+    }
+  }
+}

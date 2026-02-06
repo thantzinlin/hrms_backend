@@ -24,6 +24,9 @@ public class Role extends BaseEntity {
     @Column(name = "role_name", length = 50, nullable = false, unique = true)
     private String roleName;
 
+    @Column(length = 255)
+    private String description;
+
     @ManyToMany
     @JoinTable(name = "role_menu", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "menu_id"))
     private Set<Menu> menus = new HashSet<>();

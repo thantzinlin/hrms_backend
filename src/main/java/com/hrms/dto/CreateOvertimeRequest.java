@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Data
 public class CreateOvertimeRequest {
     @NotNull
-    private Long employeeId;
+    private String employeeId;
 
     @NotNull
     @FutureOrPresent

@@ -3,6 +3,7 @@ package com.hrms.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "employees")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Employee extends BaseEntity {
@@ -17,7 +19,7 @@ public class Employee extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    // @Column(unique = true, nullable = false)
     private String employeeId;
 
     @Column(nullable = false)
@@ -42,5 +44,7 @@ public class Employee extends BaseEntity {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    private String position;
+    @ManyToOne
+    @JoinColumn(name = "position_id")
+    private Position jobPosition;
 }

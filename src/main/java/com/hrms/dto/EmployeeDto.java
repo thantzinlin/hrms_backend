@@ -2,8 +2,6 @@ package com.hrms.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 public class EmployeeDto {
     private Long id;
@@ -11,10 +9,12 @@ public class EmployeeDto {
     private String name;
     private String email;
     private String phone;
-    private LocalDateTime joinDate;
+    private String joinDate;
     private String status;
     private String userId;
+    private String role;
     private Integer departmentId;
     private String departmentName;
+    private Long positionId;
     private String position;
 }

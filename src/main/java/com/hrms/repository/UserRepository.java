@@ -25,6 +25,9 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByResettoken(String token);
 
+    @Query("SELECT MAX(u.userId) FROM User u")
+    String findMaxUserId();
+
     @Query("""
                 SELECT u FROM User u
                 LEFT JOIN FETCH u.roles

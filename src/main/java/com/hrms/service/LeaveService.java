@@ -28,8 +28,9 @@ public class LeaveService {
 
     @Transactional
     public LeaveRequestDto createLeaveRequest(CreateLeaveRequest request) {
-        Employee employee = employeeRepository.findById(request.getEmployeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + request.getEmployeeId()));
+        Employee employee = employeeRepository.findByEmployeeId(request.getEmployeeId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Employee not found with id: " + request.getEmployeeId()));
 
         LeaveRequest leaveRequest = new LeaveRequest();
         leaveRequest.setEmployee(employee);
@@ -64,13 +65,13 @@ public class LeaveService {
         return mapToDto(updatedRequest);
     }
 
-    public List<LeaveRequestDto> getLeaveRequestsByEmployee(Long employeeId) {
-        Employee employee = employeeRepository.findById(employeeId)
+    public List<LeaveRequestDto> getLeaveRequestsByEmployee(String employeeId) {
+        Employee employee = employeeRepository.findByEmployeeId(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
         return leaveRequestRepository.findByEmployee(employee).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
     }
-    
+
     public List<LeaveRequestDto> getPendingLeaveRequests() {
         return leaveRequestRepository.findByStatus(LeaveStatus.PENDING).stream()
                 .map(this::mapToDto).collect(Collectors.toList());

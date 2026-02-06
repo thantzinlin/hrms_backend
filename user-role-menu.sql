@@ -101,15 +101,15 @@ CREATE TABLE role_menu (
 
 INSERT INTO users (user_id, username, password, email, created_by)
 VALUES
-('U001', 'superadmin', 'admin123', 'superadmin@company.com', 'system'),
-('U002', 'hradmin', 'hr123', 'hr@company.com', 'system'),
-('U003', 'manager1', 'manager123', 'manager@company.com', 'system'),
-('U004', 'employee1', 'emp123', 'employee@company.com', 'system');
+('USR00001', 'admin', 'admin123', 'superadmin@company.com', 'system'),
+('USR00002', 'hradmin', 'hr123', 'hr@company.com', 'system'),
+('USR00003', 'manager1', 'manager123', 'manager@company.com', 'system'),
+('USR00004', 'employee1', 'emp123', 'employee@company.com', 'system');
 
 INSERT INTO roles (role_name, description, created_by)
 VALUES
-('SUPER_ADMIN', 'Full system access', 'system'),
-('HR_ADMIN', 'HR administration role', 'system'),
+('ADMIN', 'Full system access', 'system'),
+('HR', 'HR administration role', 'system'),
 ('MANAGER', 'Manager role', 'system'),
 ('EMPLOYEE', 'Employee self-service role', 'system');
 
@@ -174,10 +174,10 @@ VALUES
 
 INSERT INTO user_role (user_id, role_id, created_by)
 VALUES
-('U001', (SELECT role_id FROM roles WHERE role_name = 'SUPER_ADMIN'), 'system'),
-('U002', (SELECT role_id FROM roles WHERE role_name = 'HR_ADMIN'), 'system'),
-('U003', (SELECT role_id FROM roles WHERE role_name = 'MANAGER'), 'system'),
-('U004', (SELECT role_id FROM roles WHERE role_name = 'EMPLOYEE'), 'system');
+('USR00001', (SELECT role_id FROM roles WHERE role_name = 'ADMIN'), 'system'),
+('USR00002', (SELECT role_id FROM roles WHERE role_name = 'HR'), 'system'),
+('USR00003', (SELECT role_id FROM roles WHERE role_name = 'MANAGER'), 'system'),
+('USR00004', (SELECT role_id FROM roles WHERE role_name = 'EMPLOYEE'), 'system');
 
 INSERT INTO role_menu (role_id, menu_id, created_by)
 SELECT 

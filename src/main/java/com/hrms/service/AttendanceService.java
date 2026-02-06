@@ -30,8 +30,9 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceDto checkIn(CheckInRequest request) {
-        Employee employee = employeeRepository.findById(request.getEmployeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + request.getEmployeeId()));
+        Employee employee = employeeRepository.findByUser_UserId(request.getEmployeeId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Employee not found with id: " + request.getEmployeeId()));
 
         LocalDate today = LocalDate.now();
         Optional<Attendance> existingAttendance = attendanceRepository.findByEmployeeAndDate(employee, today);
@@ -52,7 +53,8 @@ public class AttendanceService {
     @Transactional
     public AttendanceDto checkOut(CheckOutRequest request) {
         Attendance attendance = attendanceRepository.findById(request.getAttendanceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found with id: " + request.getAttendanceId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Attendance record not found with id: " + request.getAttendanceId()));
 
         if (attendance.getCheckOutTime() != null) {
             throw new IllegalStateException("Already checked out.");
@@ -64,11 +66,13 @@ public class AttendanceService {
         return mapToDto(updatedAttendance);
     }
 
-    public List<AttendanceDto> getAttendanceByEmployeeAndDateRange(Long employeeId, LocalDate startDate, LocalDate endDate) {
-        Employee employee = employeeRepository.findById(employeeId)
+    public List<AttendanceDto> getAttendanceByEmployeeAndDateRange(String employeeId, LocalDate startDate,
+            LocalDate endDate) {
+        Employee employee = employeeRepository.findByEmployeeId(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
 
-        List<Attendance> attendanceList = attendanceRepository.findByEmployeeAndDateBetween(employee, startDate, endDate);
+        List<Attendance> attendanceList = attendanceRepository.findByEmployeeAndDateBetween(employee, startDate,
+                endDate);
         return attendanceList.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
@@ -76,7 +80,6 @@ public class AttendanceService {
         List<Attendance> attendanceList = attendanceRepository.findByDate(date);
         return attendanceList.stream().map(this::mapToDto).collect(Collectors.toList());
     }
-
 
     private AttendanceDto mapToDto(Attendance attendance) {
         AttendanceDto dto = new AttendanceDto();

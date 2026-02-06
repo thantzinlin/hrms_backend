@@ -22,43 +22,49 @@ public class OvertimeController {
     private OvertimeService overtimeService;
 
     @PostMapping
-    @PreAuthorize("hasRole('EMPLOYEE') or hasRole('MANAGER') or hasRole('HR') or hasRole('ADMIN')")
-    public ResponseEntity<CustomApiResponse<OvertimeRequestDto>> createOvertimeRequest(@Valid @RequestBody CreateOvertimeRequest request) {
+    // @PreAuthorize("hasRole('EMPLOYEE') or hasRole('MANAGER') or hasRole('HR') or
+    // hasRole('ADMIN')")
+    public ResponseEntity<CustomApiResponse<OvertimeRequestDto>> createOvertimeRequest(
+            @Valid @RequestBody CreateOvertimeRequest request) {
         OvertimeRequestDto createdRequest = overtimeService.createOvertimeRequest(request);
-        return new ResponseEntity<>(CustomApiResponse.<OvertimeRequestDto>builder().data(createdRequest).build(), HttpStatus.CREATED);
+        return new ResponseEntity<>(CustomApiResponse.<OvertimeRequestDto>builder().data(createdRequest).build(),
+                HttpStatus.CREATED);
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
     public ResponseEntity<CustomApiResponse<List<OvertimeRequestDto>>> getAllOvertimeRequests() {
         List<OvertimeRequestDto> requests = overtimeService.getAllOvertimeRequests();
         return ResponseEntity.ok(CustomApiResponse.<List<OvertimeRequestDto>>builder().data(requests).build());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER') or hasRole('EMPLOYEE')")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER') or
+    // hasRole('EMPLOYEE')")
     public ResponseEntity<CustomApiResponse<OvertimeRequestDto>> getOvertimeRequestById(@PathVariable Long id) {
         OvertimeRequestDto request = overtimeService.getOvertimeRequestById(id);
         return ResponseEntity.ok(CustomApiResponse.<OvertimeRequestDto>builder().data(request).build());
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
     public ResponseEntity<CustomApiResponse<OvertimeRequestDto>> updateOvertimeRequestStatus(
             @PathVariable Long id, @Valid @RequestBody UpdateOvertimeRequestStatus request) {
         OvertimeRequestDto updatedRequest = overtimeService.updateOvertimeRequestStatus(id, request);
         return ResponseEntity.ok(CustomApiResponse.<OvertimeRequestDto>builder().data(updatedRequest).build());
     }
-    
+
     @GetMapping("/employee/{employeeId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER') or hasRole('EMPLOYEE')")
-    public ResponseEntity<CustomApiResponse<List<OvertimeRequestDto>>> getOvertimeRequestsByEmployee(@PathVariable Long employeeId) {
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER') or
+    // hasRole('EMPLOYEE')")
+    public ResponseEntity<CustomApiResponse<List<OvertimeRequestDto>>> getOvertimeRequestsByEmployee(
+            @PathVariable String employeeId) {
         List<OvertimeRequestDto> requests = overtimeService.getOvertimeRequestsByEmployee(employeeId);
         return ResponseEntity.ok(CustomApiResponse.<List<OvertimeRequestDto>>builder().data(requests).build());
     }
-    
+
     @GetMapping("/pending")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
     public ResponseEntity<CustomApiResponse<List<OvertimeRequestDto>>> getPendingOvertimeRequests() {
         List<OvertimeRequestDto> requests = overtimeService.getPendingOvertimeRequests();
         return ResponseEntity.ok(CustomApiResponse.<List<OvertimeRequestDto>>builder().data(requests).build());

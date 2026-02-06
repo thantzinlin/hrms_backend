@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class CreateEmployeeRequest {
-    @NotBlank
     private String employeeId;
 
     @NotBlank
@@ -36,9 +35,10 @@ public class CreateEmployeeRequest {
     @NotNull
     private Integer departmentId;
 
-    @NotBlank
+    private Long positionId;
+
     private String position;
-    
+
     @NotNull
     private String role;
 }

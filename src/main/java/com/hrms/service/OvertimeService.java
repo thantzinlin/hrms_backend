@@ -27,8 +27,9 @@ public class OvertimeService {
 
     @Transactional
     public OvertimeRequestDto createOvertimeRequest(CreateOvertimeRequest request) {
-        Employee employee = employeeRepository.findById(request.getEmployeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + request.getEmployeeId()));
+        Employee employee = employeeRepository.findByEmployeeId(request.getEmployeeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Employee not found with employeeId: " + request.getEmployeeId()));
 
         OvertimeRequest overtimeRequest = new OvertimeRequest();
         overtimeRequest.setEmployee(employee);
@@ -62,9 +63,9 @@ public class OvertimeService {
         return mapToDto(updatedRequest);
     }
 
-    public List<OvertimeRequestDto> getOvertimeRequestsByEmployee(Long employeeId) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
+    public List<OvertimeRequestDto> getOvertimeRequestsByEmployee(String employeeId) {
+        Employee employee = employeeRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with employeeId: " + employeeId));
         return overtimeRequestRepository.findByEmployee(employee).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
     }
@@ -74,11 +75,10 @@ public class OvertimeService {
                 .map(this::mapToDto).collect(Collectors.toList());
     }
 
-
     private OvertimeRequestDto mapToDto(OvertimeRequest overtimeRequest) {
         OvertimeRequestDto dto = new OvertimeRequestDto();
         dto.setId(overtimeRequest.getId());
-        dto.setEmployeeId(overtimeRequest.getEmployee().getId());
+        dto.setEmployeeId(overtimeRequest.getEmployee().getEmployeeId());
         dto.setEmployeeName(overtimeRequest.getEmployee().getName());
         dto.setDate(overtimeRequest.getDate());
         dto.setHours(overtimeRequest.getHours());

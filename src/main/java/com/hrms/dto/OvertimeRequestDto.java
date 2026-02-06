@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @Data
 public class OvertimeRequestDto {
     private Long id;
-    private Long employeeId;
+    private String employeeId;
     private String employeeName;
     private LocalDate date;
     private Double hours;

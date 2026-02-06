@@ -9,7 +9,9 @@ import com.hrms.model.Menu;
 
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 
-  @Query("""
+    List<Menu> findByIsDeletedFalseOrderBySequenceAsc();
+
+    @Query("""
           SELECT DISTINCT m
           FROM Role r
           JOIN r.menus m

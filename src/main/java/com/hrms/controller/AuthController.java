@@ -2,8 +2,11 @@ package com.hrms.controller;
 
 import com.hrms.dto.JwtResponse;
 import com.hrms.dto.LoginRequest;
+import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.util.CustomApiResponse;
+import com.hrms.model.Employee;
 import com.hrms.model.User;
+import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.UserRepository;
 import com.hrms.security.jwt.JwtUtils;
 import com.hrms.security.services.UserDetailsImpl;
@@ -14,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,27 +35,43 @@ public class AuthController {
         UserRepository userRepository;
 
         @Autowired
+        EmployeeRepository employeeRepository;
+
+        @Autowired
         JwtUtils jwtUtils;
 
         @PostMapping("/signin")
-        public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        public ResponseEntity<CustomApiResponse<JwtResponse>> authenticateUser(
+                        @Valid @RequestBody LoginRequest loginRequest) {
 
-                Authentication authentication = authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
-                                                loginRequest.getPassword()));
+                try {
+                        Authentication authentication = authenticationManager.authenticate(
+                                        new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
+                                                        loginRequest.getPassword()));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                String jwt = jwtUtils.generateJwtToken(authentication);
-                String refreshToken = jwtUtils.generateRefreshToken(authentication);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        String jwt = jwtUtils.generateJwtToken(authentication);
+                        String refreshToken = jwtUtils.generateRefreshToken(authentication);
 
-                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-                List<String> roles = userDetails.getAuthorities().stream()
-                                .map(item -> item.getAuthority())
-                                .collect(Collectors.toList());
+                        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                        List<String> roles = userDetails.getAuthorities().stream()
+                                        .map(item -> item.getAuthority())
+                                        .collect(Collectors.toList());
+                        Employee employee = employeeRepository.findByUser_UserId(userDetails.getUserId()).orElseThrow(
+                                        () -> new ResourceNotFoundException("Error: Employee not found."));
 
-                JwtResponse jwtResponse = new JwtResponse(jwt, refreshToken, userDetails.getUserId(),
-                                userDetails.getUsername(), userDetails.getEmail(), roles);
-                return ResponseEntity.ok(jwtResponse);
+                        JwtResponse jwtResponse = new JwtResponse(jwt, refreshToken, userDetails.getUserId(),
+                                        userDetails.getUsername(), userDetails.getEmail(), roles,
+                                        employee.getEmployeeId());
+                        return ResponseEntity.ok(CustomApiResponse.<JwtResponse>builder().data(jwtResponse).build());
+                } catch (AuthenticationException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(CustomApiResponse.<JwtResponse>builder()
+                                                        .returnCode("401")
+                                                        .returnMessage("Invalid username or password")
+                                                        .data(null)
+                                                        .build());
+                }
         }
 
         @PostMapping("/refreshtoken")
@@ -72,8 +92,12 @@ public class AuthController {
                                         .map(item -> item.getAuthority())
                                         .collect(Collectors.toList());
 
+                        Employee employee = employeeRepository.findByUser_UserId(userDetails.getUserId()).orElseThrow(
+                                        () -> new ResourceNotFoundException("Error: Employee not found."));
+
                         JwtResponse jwtResponse = new JwtResponse(newAccessToken, refreshToken, userDetails.getUserId(),
-                                        userDetails.getUsername(), userDetails.getEmail(), roles);
+                                        userDetails.getUsername(), userDetails.getEmail(), roles,
+                                        employee.getEmployeeId());
                         return ResponseEntity.ok(CustomApiResponse.<JwtResponse>builder().data(jwtResponse).build());
 
                 } else {
