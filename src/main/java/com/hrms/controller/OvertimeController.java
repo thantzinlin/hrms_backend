@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/overtime")
+@RequestMapping(value = { "/api/overtime-requests", "/api/overtime" })
 public class OvertimeController {
 
     @Autowired

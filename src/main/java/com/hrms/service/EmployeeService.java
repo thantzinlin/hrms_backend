@@ -5,6 +5,7 @@ import com.hrms.dto.EmployeeDto;
 import com.hrms.dto.UpdateEmployeeRequest;
 import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.model.*;
+import com.hrms.repository.ApprovalAuthorityRepository;
 import com.hrms.repository.DepartmentRepository;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PositionRepository;
@@ -38,6 +39,9 @@ public class EmployeeService {
 
     @Autowired
     private PositionRepository positionRepository;
+
+    @Autowired
+    private ApprovalAuthorityRepository approvalAuthorityRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -86,9 +90,22 @@ public class EmployeeService {
         employee.setUser(savedUser);
         employee.setDepartment(department);
         employee.setJobPosition(position);
+        if (request.getReportingToId() != null) {
+            Employee manager = employeeRepository.findById(request.getReportingToId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Reporting manager not found with id: " + request.getReportingToId()));
+            employee.setReportingTo(manager);
+            ensureManagerHasSupervisorAuthority(manager);
+        }
 
         Employee savedEmployee = employeeRepository.save(employee);
-        return mapToDto(savedEmployee);
+        saveApprovalAuthority(savedEmployee,
+                request.getCanApproveLeave(),
+                request.getCanApproveOvertime(),
+                request.getIsHr());
+        EmployeeDto dto = mapToDto(savedEmployee);
+        enrichDtoWithApprovalAuthority(dto, savedEmployee.getId());
+        return dto;
     }
 
     public Page<EmployeeDto> getAllEmployees(Pageable pageable) {
@@ -98,7 +115,9 @@ public class EmployeeService {
     public EmployeeDto getEmployeeById(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
-        return mapToDto(employee);
+        EmployeeDto dto = mapToDto(employee);
+        enrichDtoWithApprovalAuthority(dto, id);
+        return dto;
     }
 
     @Transactional
@@ -142,14 +161,30 @@ public class EmployeeService {
                 userRepository.save(user);
             }
         }
+        if (request.getReportingToId() != null) {
+            Employee manager = employeeRepository.findById(request.getReportingToId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Reporting manager not found with id: " + request.getReportingToId()));
+            employee.setReportingTo(manager);
+            ensureManagerHasSupervisorAuthority(manager);
+        } else {
+            employee.setReportingTo(null);
+        }
 
         Employee updatedEmployee = employeeRepository.save(employee);
-        return mapToDto(updatedEmployee);
+        saveApprovalAuthority(updatedEmployee,
+                request.getCanApproveLeave(),
+                request.getCanApproveOvertime(),
+                request.getIsHr());
+        EmployeeDto dto = mapToDto(updatedEmployee);
+        enrichDtoWithApprovalAuthority(dto, updatedEmployee.getId());
+        return dto;
     }
 
     public void deleteEmployee(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
+        approvalAuthorityRepository.findByEmployee_Id(id).ifPresent(approvalAuthorityRepository::delete);
         employeeRepository.delete(employee);
         userRepository.delete(employee.getUser());
     }
@@ -178,7 +213,62 @@ public class EmployeeService {
             dto.setPositionId(employee.getJobPosition().getPositionId());
             dto.setPosition(employee.getJobPosition().getPositionName());
         }
+        if (employee.getReportingTo() != null) {
+            dto.setReportingToId(employee.getReportingTo().getId());
+            dto.setReportingToName(employee.getReportingTo().getName());
+        }
         return dto;
+    }
+
+    /** Load approval_authorities for this employee and set flags on DTO. */
+    private void enrichDtoWithApprovalAuthority(EmployeeDto dto, Long employeeId) {
+        approvalAuthorityRepository.findByEmployee_Id(employeeId).ifPresent(auth -> {
+            dto.setCanApproveLeave(auth.getCanApproveLeave());
+            dto.setCanApproveOvertime(auth.getCanApproveOvertime());
+            dto.setIsHr(auth.getIsHr());
+        });
+    }
+
+    /** Create or update approval_authorities for this employee. */
+    private void saveApprovalAuthority(Employee employee, Boolean canApproveLeave, Boolean canApproveOvertime, Boolean isHr) {
+        boolean hasAny = Boolean.TRUE.equals(canApproveLeave) || Boolean.TRUE.equals(canApproveOvertime) || Boolean.TRUE.equals(isHr);
+        ApprovalAuthority auth = approvalAuthorityRepository.findByEmployee_Id(employee.getId()).orElse(null);
+        if (hasAny) {
+            if (auth == null) {
+                auth = new ApprovalAuthority();
+                auth.setEmployee(employee);
+            }
+            auth.setCanApproveLeave(Boolean.TRUE.equals(canApproveLeave));
+            auth.setCanApproveOvertime(Boolean.TRUE.equals(canApproveOvertime));
+            auth.setIsHr(Boolean.TRUE.equals(isHr));
+            approvalAuthorityRepository.save(auth);
+        } else if (auth != null) {
+            approvalAuthorityRepository.delete(auth);
+        }
+    }
+
+    /**
+     * When an employee is assigned a "Reports to" manager, ensure that manager has
+     * supervisor approval authority so they appear in GET /approvals/pending.
+     * If the manager has no approval_authorities row yet, create one with
+     * can_approve_leave and can_approve_overtime = true (is_hr unchanged/false).
+     * If they already have a row, do not override their existing flags.
+     */
+    private void ensureManagerHasSupervisorAuthority(Employee manager) {
+        if (manager == null) return;
+        ApprovalAuthority auth = approvalAuthorityRepository.findByEmployee_Id(manager.getId()).orElse(null);
+        if (auth == null) {
+            auth = new ApprovalAuthority();
+            auth.setEmployee(manager);
+            auth.setCanApproveLeave(true);
+            auth.setCanApproveOvertime(true);
+            auth.setIsHr(false);
+            approvalAuthorityRepository.save(auth);
+        } else {
+            if (!Boolean.TRUE.equals(auth.getCanApproveLeave())) auth.setCanApproveLeave(true);
+            if (!Boolean.TRUE.equals(auth.getCanApproveOvertime())) auth.setCanApproveOvertime(true);
+            approvalAuthorityRepository.save(auth);
+        }
     }
 
     private com.hrms.model.Position resolvePosition(Long positionId, String positionName) {

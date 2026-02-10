@@ -41,4 +41,14 @@ public class CreateEmployeeRequest {
 
     @NotNull
     private String role;
+
+    /** Optional: reporting manager id (employees.id). */
+    private Long reportingToId;
+
+    /** Approval authority: can approve leave at supervisor level. */
+    private Boolean canApproveLeave;
+    /** Approval authority: can approve overtime at supervisor level. */
+    private Boolean canApproveOvertime;
+    /** Approval authority: is HR (final approval). */
+    private Boolean isHr;
 }

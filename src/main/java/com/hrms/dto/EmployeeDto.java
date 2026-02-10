@@ -17,4 +17,14 @@ public class EmployeeDto {
     private String departmentName;
     private Long positionId;
     private String position;
+    /** Reporting manager id (for hierarchy / approval workflow). */
+    private Long reportingToId;
+    private String reportingToName;
+
+    /** Approval authority: can approve leave at supervisor level. */
+    private Boolean canApproveLeave;
+    /** Approval authority: can approve overtime at supervisor level. */
+    private Boolean canApproveOvertime;
+    /** Approval authority: is HR (final approval for leave & overtime). */
+    private Boolean isHr;
 }

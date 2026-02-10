@@ -4,12 +4,20 @@ import com.hrms.model.Employee;
 import com.hrms.model.OvertimeRequest;
 import com.hrms.model.OvertimeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
 public interface OvertimeRequestRepository extends JpaRepository<OvertimeRequest, Long> {
     List<OvertimeRequest> findByEmployee(Employee employee);
     List<OvertimeRequest> findByStatus(OvertimeStatus status);
+    List<OvertimeRequest> findByStatusIn(Collection<OvertimeStatus> statuses);
+
+    /** Fetch overtime requests with employee and employee.reportingTo so approval resolution works without lazy load. */
+    @Query("SELECT or FROM OvertimeRequest or JOIN FETCH or.employee e LEFT JOIN FETCH e.reportingTo WHERE or.status = :status")
+    List<OvertimeRequest> findByStatusWithEmployeeAndReportingTo(@Param("status") OvertimeStatus status);
 }

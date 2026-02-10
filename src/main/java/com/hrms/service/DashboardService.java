@@ -37,9 +37,11 @@ public class DashboardService {
         List<Attendance> todayAttendance = attendanceRepository.findByDate(today);
         stats.setTodayAttendanceCount((long) todayAttendance.size());
 
-        stats.setPendingLeaveCount(leaveRequestRepository.findByStatus(LeaveStatus.PENDING).stream().count());
-        stats.setPendingOvertimeCount(overtimeRequestRepository.findByStatus(OvertimeStatus.PENDING).stream().count());
-        
+        stats.setPendingLeaveCount(
+                leaveRequestRepository.findByStatus(LeaveStatus.PENDING_SUPERVISOR).stream().count());
+        stats.setPendingOvertimeCount(
+                overtimeRequestRepository.findByStatus(OvertimeStatus.PENDING_SUPERVISOR).stream().count());
+
         return stats;
     }
 }

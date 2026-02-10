@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "reportingTo")
 public class Employee extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,4 +49,9 @@ public class Employee extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "position_id")
     private Position jobPosition;
+
+    /** Reporting manager (self-referencing). Used for hierarchy-based approval. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporting_to")
+    private Employee reportingTo;
 }

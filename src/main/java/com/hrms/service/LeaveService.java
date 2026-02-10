@@ -38,7 +38,7 @@ public class LeaveService {
         leaveRequest.setEndDate(request.getEndDate());
         leaveRequest.setReason(request.getReason());
         leaveRequest.setLeaveType(request.getLeaveType());
-        leaveRequest.setStatus(LeaveStatus.PENDING);
+        leaveRequest.setStatus(LeaveStatus.PENDING_SUPERVISOR);
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
         return mapToDto(savedRequest);
@@ -73,7 +73,8 @@ public class LeaveService {
     }
 
     public List<LeaveRequestDto> getPendingLeaveRequests() {
-        return leaveRequestRepository.findByStatus(LeaveStatus.PENDING).stream()
+        return leaveRequestRepository.findByStatusIn(java.util.List.of(
+                LeaveStatus.PENDING_SUPERVISOR, LeaveStatus.PENDING_HR)).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
     }
 

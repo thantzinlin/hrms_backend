@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/leaves")
+@RequestMapping(value = { "/api/leave-requests", "/api/leaves" })
 public class LeaveController {
 
     @Autowired

@@ -36,7 +36,7 @@ public class OvertimeService {
         overtimeRequest.setDate(request.getDate());
         overtimeRequest.setHours(request.getHours());
         overtimeRequest.setReason(request.getReason());
-        overtimeRequest.setStatus(OvertimeStatus.PENDING);
+        overtimeRequest.setStatus(OvertimeStatus.PENDING_SUPERVISOR);
 
         OvertimeRequest savedRequest = overtimeRequestRepository.save(overtimeRequest);
         return mapToDto(savedRequest);
@@ -71,7 +71,8 @@ public class OvertimeService {
     }
 
     public List<OvertimeRequestDto> getPendingOvertimeRequests() {
-        return overtimeRequestRepository.findByStatus(OvertimeStatus.PENDING).stream()
+        return overtimeRequestRepository.findByStatusIn(java.util.List.of(
+                OvertimeStatus.PENDING_SUPERVISOR, OvertimeStatus.PENDING_HR)).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
     }
 
