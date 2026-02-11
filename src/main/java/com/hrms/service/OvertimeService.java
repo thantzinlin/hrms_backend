@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 @Service
 public class OvertimeService {
 
+    private static final double MAX_OVERTIME_HOURS_PER_DAY = 12.0;
+
     @Autowired
     private OvertimeRequestRepository overtimeRequestRepository;
 
@@ -36,6 +38,17 @@ public class OvertimeService {
         Employee employee = employeeRepository.findByEmployeeId(request.getEmployeeId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employee not found with employeeId: " + request.getEmployeeId()));
+
+        validateOvertimeRequest(request);
+
+        boolean duplicate = overtimeRequestRepository.existsByEmployeeAndDateAndStatusIn(
+                employee,
+                request.getDate(),
+                List.of(OvertimeStatus.PENDING_SUPERVISOR, OvertimeStatus.PENDING_HR, OvertimeStatus.APPROVED));
+        if (duplicate) {
+            throw new IllegalArgumentException(
+                    "An overtime request for " + request.getDate() + " already exists (pending or approved).");
+        }
 
         OvertimeRequest overtimeRequest = new OvertimeRequest();
         overtimeRequest.setEmployee(employee);
@@ -101,6 +114,15 @@ public class OvertimeService {
         return overtimeRequestRepository.findByStatusIn(
                 java.util.List.of(OvertimeStatus.PENDING_SUPERVISOR, OvertimeStatus.PENDING_HR), pageable)
                 .map(this::mapToDto);
+    }
+
+    private void validateOvertimeRequest(CreateOvertimeRequest request) {
+        if (request.getHours() == null || request.getHours() <= 0) {
+            throw new IllegalArgumentException("Overtime hours must be greater than zero.");
+        }
+        if (request.getHours() > MAX_OVERTIME_HOURS_PER_DAY) {
+            throw new IllegalArgumentException("Overtime cannot exceed " + MAX_OVERTIME_HOURS_PER_DAY + " hours per day.");
+        }
     }
 
     private OvertimeRequestDto mapToDto(OvertimeRequest overtimeRequest) {

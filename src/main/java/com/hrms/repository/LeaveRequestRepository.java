@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -27,4 +28,19 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     List<LeaveRequest> findByStatusWithEmployeeAndReportingTo(@Param("status") LeaveStatus status);
 
     long countByLeaveTypeId(Long leaveTypeId);
+
+    /**
+     * Find overlapping leave requests for an employee (PENDING or APPROVED only).
+     * Overlap: newStart <= existingEnd AND newEnd >= existingStart
+     */
+    @Query("""
+            SELECT lr FROM LeaveRequest lr
+            WHERE lr.employee = :employee
+            AND lr.status IN :statuses
+            AND (:startDate <= lr.endDate AND :endDate >= lr.startDate)
+            """)
+    List<LeaveRequest> findOverlappingLeave(@Param("employee") Employee employee,
+                                            @Param("startDate") LocalDate startDate,
+                                            @Param("endDate") LocalDate endDate,
+                                            @Param("statuses") Collection<LeaveStatus> statuses);
 }

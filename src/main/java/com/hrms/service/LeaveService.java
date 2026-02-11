@@ -18,12 +18,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class LeaveService {
+
+    private static final int MAX_LEAVE_DAYS_PER_REQUEST = 90;
 
     @Autowired
     private LeaveRequestRepository leaveRequestRepository;
@@ -45,6 +48,19 @@ public class LeaveService {
 
         LeaveType leaveType = leaveTypeRepository.findById(request.getLeaveTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Leave type not found with id: " + request.getLeaveTypeId()));
+
+        validateLeaveRequest(request);
+
+        List<LeaveRequest> overlapping = leaveRequestRepository.findOverlappingLeave(
+                employee,
+                request.getStartDate(),
+                request.getEndDate(),
+                List.of(LeaveStatus.PENDING_SUPERVISOR, LeaveStatus.PENDING_HR, LeaveStatus.APPROVED));
+        if (!overlapping.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Leave request overlaps with an existing leave (pending or approved) for dates "
+                            + overlapping.get(0).getStartDate() + " to " + overlapping.get(0).getEndDate() + ".");
+        }
 
         LeaveRequest leaveRequest = new LeaveRequest();
         leaveRequest.setEmployee(employee);
@@ -117,6 +133,18 @@ public class LeaveService {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Leave request not found with id: " + id));
         return ChronoUnit.DAYS.between(leaveRequest.getStartDate(), leaveRequest.getEndDate()) + 1;
+    }
+
+    private void validateLeaveRequest(CreateLeaveRequest request) {
+        LocalDate start = request.getStartDate();
+        LocalDate end = request.getEndDate();
+        if (end.isBefore(start)) {
+            throw new IllegalArgumentException("End date must be on or after start date.");
+        }
+        long days = ChronoUnit.DAYS.between(start, end) + 1;
+        if (days > MAX_LEAVE_DAYS_PER_REQUEST) {
+            throw new IllegalArgumentException("Leave cannot exceed " + MAX_LEAVE_DAYS_PER_REQUEST + " days per request.");
+        }
     }
 
     private LeaveRequestDto mapToDto(LeaveRequest leaveRequest) {
