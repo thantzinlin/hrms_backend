@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -87,6 +88,13 @@ public class EmployeeService {
 
         employee.setJoinDate(request.getJoinDate());
         employee.setStatus(request.getStatus());
+        employee.setFatherName(request.getFatherName());
+        employee.setDateOfBirth(request.getDateOfBirth());
+        employee.setNationality(request.getNationality());
+        employee.setRace(request.getRace());
+        employee.setGender(request.getGender());
+        employee.setMaritalStatus(request.getMaritalStatus());
+        employee.setNrc(request.getNrc());
         employee.setUser(savedUser);
         employee.setDepartment(department);
         employee.setJobPosition(position);
@@ -110,6 +118,13 @@ public class EmployeeService {
 
     public Page<EmployeeDto> getAllEmployees(Pageable pageable) {
         return employeeRepository.findAll(pageable).map(this::mapToDto);
+    }
+
+    public Page<EmployeeDto> searchEmployees(String search, Pageable pageable) {
+        if (search != null && !search.isBlank()) {
+            return employeeRepository.searchByEmployeeIdOrNameOrEmailOrPhone(search.trim(), pageable).map(this::mapToDto);
+        }
+        return getAllEmployees(pageable);
     }
 
     public EmployeeDto getEmployeeById(Long id) {
@@ -139,6 +154,27 @@ public class EmployeeService {
         }
         if (request.getStatus() != null) {
             employee.setStatus(request.getStatus());
+        }
+        if (request.getFatherName() != null) {
+            employee.setFatherName(request.getFatherName());
+        }
+        if (request.getDateOfBirth() != null) {
+            employee.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (request.getNationality() != null) {
+            employee.setNationality(request.getNationality());
+        }
+        if (request.getRace() != null) {
+            employee.setRace(request.getRace());
+        }
+        if (request.getGender() != null) {
+            employee.setGender(request.getGender());
+        }
+        if (request.getMaritalStatus() != null) {
+            employee.setMaritalStatus(request.getMaritalStatus());
+        }
+        if (request.getNrc() != null) {
+            employee.setNrc(request.getNrc());
         }
         if (request.getDepartmentId() != null) {
             Department department = departmentRepository.findById(request.getDepartmentId())
@@ -198,6 +234,13 @@ public class EmployeeService {
         dto.setPhone(employee.getPhone());
         dto.setJoinDate(employee.getJoinDate().toString());
         dto.setStatus(employee.getStatus());
+        dto.setFatherName(employee.getFatherName());
+        dto.setDateOfBirth(employee.getDateOfBirth() != null ? employee.getDateOfBirth().toString() : null);
+        dto.setNationality(employee.getNationality());
+        dto.setRace(employee.getRace());
+        dto.setGender(employee.getGender());
+        dto.setMaritalStatus(employee.getMaritalStatus());
+        dto.setNrc(employee.getNrc());
         if (employee.getUser() != null) {
             dto.setUserId(employee.getUser().getUserId());
             if (employee.getUser().getRoles() != null && !employee.getUser().getRoles().isEmpty()) {

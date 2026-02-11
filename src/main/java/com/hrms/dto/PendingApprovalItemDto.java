@@ -6,11 +6,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * A single item in the pending approvals list (leave or overtime).
- * Id is composite: "LEAVE-1" or "OVERTIME-2" for use in approve/reject endpoints.
+ * A single item in the pending approvals list (leave, overtime, or claim).
+ * Id is composite: "LEAVE-1", "OVERTIME-2", "CLAIM-3" for use in approve/reject endpoints.
  */
 @Data
 @Builder
@@ -23,9 +24,13 @@ public class PendingApprovalItemDto {
     private Long requestId;
     private String requesterEmployeeId;
     private String requesterName;
-    private LocalDate startDate;  // leave: start; overtime: date
-    private LocalDate endDate;    // leave only; null for overtime
+    private LocalDate startDate;  // leave: start; overtime/claim: date
+    private LocalDate endDate;    // leave only; null for overtime/claim
     private String reason;
-    private String leaveType;     // leave only; null for overtime
-    private Double hours;         // overtime only; null for leave
+    private String leaveType;     // leave only; null for overtime/claim
+    private Double hours;         // overtime only; null for leave/claim
+    /** Claim: total amount */
+    private BigDecimal amount;
+    /** Claim: claim type name */
+    private String claimType;
 }

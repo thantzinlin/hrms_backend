@@ -4,6 +4,7 @@ import com.hrms.dto.PendingApprovalItemDto;
 import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.model.*;
 import com.hrms.repository.ApprovalHistoryRepository;
+import com.hrms.repository.ClaimRepository;
 import com.hrms.repository.LeaveRequestRepository;
 import com.hrms.repository.OvertimeRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,39 +28,61 @@ public class ApprovalWorkflowService {
     @Autowired
     private OvertimeRequestRepository overtimeRequestRepository;
     @Autowired
+    private ClaimRepository claimRepository;
+    @Autowired
     private ApprovalHistoryRepository approvalHistoryRepository;
     @Autowired
     private ApprovalResolutionService resolutionService;
 
-    /** Pending items where the given employee is the next approver (supervisor or HR). */
+    /**
+     * Pending items where the given employee is the next approver (supervisor or
+     * HR).
+     */
     @Transactional(readOnly = true)
     public List<PendingApprovalItemDto> getPendingForApprover(Employee approver) {
-        if (approver == null) return List.of();
+        if (approver == null)
+            return List.of();
         List<PendingApprovalItemDto> result = new ArrayList<>();
 
-        // Supervisor-level: leave/overtime in PENDING_SUPERVISOR where I am the resolved supervisor
-        // (Requester must have reporting_to set; supervisor must have approval_authorities.can_approve_leave/overtime = true)
-        List<LeaveRequest> leaveSupervisor = leaveRequestRepository.findByStatusWithEmployeeAndReportingTo(LeaveStatus.PENDING_SUPERVISOR);
+        // Supervisor-level: leave/overtime in PENDING_SUPERVISOR where I am the
+        // resolved supervisor
+        // (Requester must have reporting_to set; supervisor must have
+        // approval_authorities.can_approve_leave/overtime = true)
+        List<LeaveRequest> leaveSupervisor = leaveRequestRepository
+                .findByStatusWithEmployeeAndReportingTo(LeaveStatus.PENDING_SUPERVISOR);
         for (LeaveRequest lr : leaveSupervisor) {
             Optional<Employee> sup = resolutionService.resolveSupervisorApprover(lr.getEmployee(), RequestType.LEAVE);
             if (sup.map(s -> s.getId().equals(approver.getId())).orElse(false)) {
                 result.add(toPendingDto(lr));
             }
         }
-        List<OvertimeRequest> otSupervisor = overtimeRequestRepository.findByStatusWithEmployeeAndReportingTo(OvertimeStatus.PENDING_SUPERVISOR);
+        List<OvertimeRequest> otSupervisor = overtimeRequestRepository
+                .findByStatusWithEmployeeAndReportingTo(OvertimeStatus.PENDING_SUPERVISOR);
         for (OvertimeRequest or : otSupervisor) {
-            Optional<Employee> sup = resolutionService.resolveSupervisorApprover(or.getEmployee(), RequestType.OVERTIME);
+            Optional<Employee> sup = resolutionService.resolveSupervisorApprover(or.getEmployee(),
+                    RequestType.OVERTIME);
             if (sup.map(s -> s.getId().equals(approver.getId())).orElse(false)) {
                 result.add(toPendingDto(or));
             }
         }
+        List<com.hrms.model.Claim> claimSupervisor = claimRepository
+                .findByStatusWithEmployeeAndReportingTo(ClaimStatus.PENDING_SUPERVISOR);
+        for (com.hrms.model.Claim c : claimSupervisor) {
+            Optional<Employee> sup = resolutionService.resolveSupervisorApprover(c.getEmployee(), RequestType.CLAIM);
+            if (sup.map(s -> s.getId().equals(approver.getId())).orElse(false)) {
+                result.add(toPendingDto(c));
+            }
+        }
 
-        // HR-level: leave/overtime in PENDING_HR and I am HR
+        // HR-level: leave/overtime/claim in PENDING_HR and I am HR
         if (Boolean.TRUE.equals(resolutionService.isHrApprover(approver))) {
             leaveRequestRepository.findByStatus(LeaveStatus.PENDING_HR).stream()
                     .map(this::toPendingDto)
                     .forEach(result::add);
             overtimeRequestRepository.findByStatus(OvertimeStatus.PENDING_HR).stream()
+                    .map(this::toPendingDto)
+                    .forEach(result::add);
+            claimRepository.findByStatus(ClaimStatus.PENDING_HR).stream()
                     .map(this::toPendingDto)
                     .forEach(result::add);
         }
@@ -79,8 +102,9 @@ public class ApprovalWorkflowService {
             }
             lr.setStatus(LeaveStatus.PENDING_HR);
             leaveRequestRepository.save(lr);
-            recordHistory(RequestType.LEAVE, requestId, approver, ApprovalLevel.SUPERVISOR, ApprovalAction.APPROVED, remarks);
-        } else {
+            recordHistory(RequestType.LEAVE, requestId, approver, ApprovalLevel.SUPERVISOR, ApprovalAction.APPROVED,
+                    remarks);
+        } else if (requestType == RequestType.OVERTIME) {
             OvertimeRequest or = overtimeRequestRepository.findById(requestId)
                     .orElseThrow(() -> new ResourceNotFoundException("Overtime request not found: " + requestId));
             if (or.getStatus() != OvertimeStatus.PENDING_SUPERVISOR) {
@@ -91,7 +115,21 @@ public class ApprovalWorkflowService {
             }
             or.setStatus(OvertimeStatus.PENDING_HR);
             overtimeRequestRepository.save(or);
-            recordHistory(RequestType.OVERTIME, requestId, approver, ApprovalLevel.SUPERVISOR, ApprovalAction.APPROVED, remarks);
+            recordHistory(RequestType.OVERTIME, requestId, approver, ApprovalLevel.SUPERVISOR, ApprovalAction.APPROVED,
+                    remarks);
+        } else {
+            com.hrms.model.Claim claim = claimRepository.findById(requestId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Claim not found: " + requestId));
+            if (claim.getStatus() != ClaimStatus.PENDING_SUPERVISOR) {
+                throw new IllegalStateException("Claim is not pending supervisor approval");
+            }
+            if (!resolutionService.canApproveAsSupervisor(approver, RequestType.CLAIM)) {
+                throw new IllegalStateException("Employee is not authorized to approve claims as supervisor");
+            }
+            claim.setStatus(ClaimStatus.PENDING_HR);
+            claimRepository.save(claim);
+            recordHistory(RequestType.CLAIM, requestId, approver, ApprovalLevel.SUPERVISOR, ApprovalAction.APPROVED,
+                    remarks);
         }
     }
 
@@ -109,7 +147,7 @@ public class ApprovalWorkflowService {
             lr.setStatus(LeaveStatus.APPROVED);
             leaveRequestRepository.save(lr);
             recordHistory(RequestType.LEAVE, requestId, approver, ApprovalLevel.HR, ApprovalAction.APPROVED, remarks);
-        } else {
+        } else if (requestType == RequestType.OVERTIME) {
             OvertimeRequest or = overtimeRequestRepository.findById(requestId)
                     .orElseThrow(() -> new ResourceNotFoundException("Overtime request not found: " + requestId));
             if (or.getStatus() != OvertimeStatus.PENDING_HR) {
@@ -117,7 +155,19 @@ public class ApprovalWorkflowService {
             }
             or.setStatus(OvertimeStatus.APPROVED);
             overtimeRequestRepository.save(or);
-            recordHistory(RequestType.OVERTIME, requestId, approver, ApprovalLevel.HR, ApprovalAction.APPROVED, remarks);
+            recordHistory(RequestType.OVERTIME, requestId, approver, ApprovalLevel.HR, ApprovalAction.APPROVED,
+                    remarks);
+        } else {
+            com.hrms.model.Claim claim = claimRepository.findById(requestId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Claim not found: " + requestId));
+            if (claim.getStatus() != ClaimStatus.PENDING_HR) {
+                throw new IllegalStateException("Claim is not pending HR approval");
+            }
+            claim.setStatus(ClaimStatus.APPROVED);
+            claim.setApprovedBy(approver);
+            claim.setApprovedAt(java.time.LocalDateTime.now());
+            claimRepository.save(claim);
+            recordHistory(RequestType.CLAIM, requestId, approver, ApprovalLevel.HR, ApprovalAction.APPROVED, remarks);
         }
     }
 
@@ -129,33 +179,51 @@ public class ApprovalWorkflowService {
             if (lr.getStatus() == LeaveStatus.APPROVED || lr.getStatus() == LeaveStatus.REJECTED) {
                 throw new IllegalStateException("Leave request is already in final state");
             }
-            ApprovalLevel level = lr.getStatus() == LeaveStatus.PENDING_SUPERVISOR ? ApprovalLevel.SUPERVISOR : ApprovalLevel.HR;
+            ApprovalLevel level = lr.getStatus() == LeaveStatus.PENDING_SUPERVISOR ? ApprovalLevel.SUPERVISOR
+                    : ApprovalLevel.HR;
             ensureCanActAtLevel(approver, RequestType.LEAVE, lr.getEmployee(), level);
             lr.setStatus(LeaveStatus.REJECTED);
             leaveRequestRepository.save(lr);
             recordHistory(RequestType.LEAVE, requestId, approver, level, ApprovalAction.REJECTED, remarks);
-        } else {
+        } else if (requestType == RequestType.OVERTIME) {
             OvertimeRequest or = overtimeRequestRepository.findById(requestId)
                     .orElseThrow(() -> new ResourceNotFoundException("Overtime request not found: " + requestId));
             if (or.getStatus() == OvertimeStatus.APPROVED || or.getStatus() == OvertimeStatus.REJECTED) {
                 throw new IllegalStateException("Overtime request is already in final state");
             }
-            ApprovalLevel level = or.getStatus() == OvertimeStatus.PENDING_SUPERVISOR ? ApprovalLevel.SUPERVISOR : ApprovalLevel.HR;
+            ApprovalLevel level = or.getStatus() == OvertimeStatus.PENDING_SUPERVISOR ? ApprovalLevel.SUPERVISOR
+                    : ApprovalLevel.HR;
             ensureCanActAtLevel(approver, RequestType.OVERTIME, or.getEmployee(), level);
             or.setStatus(OvertimeStatus.REJECTED);
             overtimeRequestRepository.save(or);
             recordHistory(RequestType.OVERTIME, requestId, approver, level, ApprovalAction.REJECTED, remarks);
+        } else {
+            com.hrms.model.Claim claim = claimRepository.findById(requestId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Claim not found: " + requestId));
+            if (claim.getStatus() == ClaimStatus.APPROVED || claim.getStatus() == ClaimStatus.REJECTED
+                    || claim.getStatus() == ClaimStatus.REIMBURSED) {
+                throw new IllegalStateException("Claim is already in final state");
+            }
+            ApprovalLevel level = claim.getStatus() == ClaimStatus.PENDING_SUPERVISOR ? ApprovalLevel.SUPERVISOR
+                    : ApprovalLevel.HR;
+            ensureCanActAtLevel(approver, RequestType.CLAIM, claim.getEmployee(), level);
+            claim.setStatus(ClaimStatus.REJECTED);
+            claim.setRejectionRemarks(remarks);
+            claimRepository.save(claim);
+            recordHistory(RequestType.CLAIM, requestId, approver, level, ApprovalAction.REJECTED, remarks);
         }
     }
 
-    private void ensureCanActAtLevel(Employee approver, RequestType requestType, Employee requester, ApprovalLevel level) {
+    private void ensureCanActAtLevel(Employee approver, RequestType requestType, Employee requester,
+            ApprovalLevel level) {
         if (level == ApprovalLevel.SUPERVISOR) {
             Optional<Employee> resolved = resolutionService.resolveSupervisorApprover(requester, requestType);
             if (resolved.isEmpty() || !resolved.get().getId().equals(approver.getId())) {
                 throw new IllegalStateException("You are not the designated supervisor approver for this request");
             }
             if (!resolutionService.canApproveAsSupervisor(approver, requestType)) {
-                throw new IllegalStateException("Employee is not authorized to act as supervisor for this request type");
+                throw new IllegalStateException(
+                        "Employee is not authorized to act as supervisor for this request type");
             }
         } else {
             if (!resolutionService.isHrApprover(approver)) {
@@ -177,7 +245,7 @@ public class ApprovalWorkflowService {
             } else {
                 throw new IllegalStateException("Leave request is not in a pending approval state");
             }
-        } else {
+        } else if (requestType == RequestType.OVERTIME) {
             OvertimeRequest or = overtimeRequestRepository.findById(requestId)
                     .orElseThrow(() -> new ResourceNotFoundException("Overtime request not found: " + requestId));
             if (or.getStatus() == OvertimeStatus.PENDING_SUPERVISOR) {
@@ -187,11 +255,21 @@ public class ApprovalWorkflowService {
             } else {
                 throw new IllegalStateException("Overtime request is not in a pending approval state");
             }
+        } else {
+            com.hrms.model.Claim claim = claimRepository.findById(requestId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Claim not found: " + requestId));
+            if (claim.getStatus() == ClaimStatus.PENDING_SUPERVISOR) {
+                approveAsSupervisor(RequestType.CLAIM, requestId, approver, remarks);
+            } else if (claim.getStatus() == ClaimStatus.PENDING_HR) {
+                approveAsHr(RequestType.CLAIM, requestId, approver, remarks);
+            } else {
+                throw new IllegalStateException("Claim is not in a pending approval state");
+            }
         }
     }
 
     private void recordHistory(RequestType requestType, Long requestId, Employee approver,
-                               ApprovalLevel level, ApprovalAction action, String remarks) {
+            ApprovalLevel level, ApprovalAction action, String remarks) {
         ApprovalHistory h = new ApprovalHistory();
         h.setRequestType(requestType);
         h.setRequestId(requestId);
@@ -228,6 +306,20 @@ public class ApprovalWorkflowService {
                 .startDate(or.getDate())
                 .reason(or.getReason())
                 .hours(or.getHours())
+                .build();
+    }
+
+    private PendingApprovalItemDto toPendingDto(com.hrms.model.Claim c) {
+        return PendingApprovalItemDto.builder()
+                .id(RequestType.CLAIM.name() + "-" + c.getId())
+                .requestType(RequestType.CLAIM)
+                .requestId(c.getId())
+                .requesterEmployeeId(c.getEmployee().getEmployeeId())
+                .requesterName(c.getEmployee().getName())
+                .startDate(c.getClaimDate())
+                .reason(c.getDescription())
+                .amount(c.getTotalAmount())
+                .claimType(c.getClaimType() != null ? c.getClaimType().getName() : null)
                 .build();
     }
 }

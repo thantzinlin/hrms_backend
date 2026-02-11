@@ -11,6 +11,13 @@ public class EmployeeDto {
     private String phone;
     private String joinDate;
     private String status;
+    private String fatherName;
+    private String dateOfBirth;
+    private String nationality;
+    private String race;
+    private String gender;
+    private String maritalStatus;
+    private String nrc;
     private String userId;
     private String role;
     private Integer departmentId;

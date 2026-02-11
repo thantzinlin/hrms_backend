@@ -32,8 +32,10 @@ public class EmployeeController {
 
     @GetMapping
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
-    public ResponseEntity<CustomApiResponse<Page<EmployeeDto>>> getAllEmployees(Pageable pageable) {
-        Page<EmployeeDto> employees = employeeService.getAllEmployees(pageable);
+    public ResponseEntity<CustomApiResponse<Page<EmployeeDto>>> getAllEmployees(
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+        Page<EmployeeDto> employees = employeeService.searchEmployees(search, pageable);
         return ResponseEntity.ok(CustomApiResponse.<Page<EmployeeDto>>builder().data(employees).build());
     }
 

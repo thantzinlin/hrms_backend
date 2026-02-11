@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -37,6 +38,27 @@ public class Employee extends BaseEntity {
 
     @Column(nullable = false)
     private String status;
+
+    @Column(name = "father_name", length = 255)
+    private String fatherName;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Column(length = 100)
+    private String nationality;
+
+    @Column(length = 100)
+    private String race;
+
+    @Column(length = 50)
+    private String gender;
+
+    @Column(name = "marital_status", length = 50)
+    private String maritalStatus;
+
+    @Column(length = 100)
+    private String nrc;
 
     @OneToOne
     @JoinColumn(name = "user_id")

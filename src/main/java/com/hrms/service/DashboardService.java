@@ -2,9 +2,11 @@ package com.hrms.service;
 
 import com.hrms.dto.DashboardStatsDto;
 import com.hrms.model.Attendance;
+import com.hrms.model.ClaimStatus;
 import com.hrms.model.LeaveStatus;
 import com.hrms.model.OvertimeStatus;
 import com.hrms.repository.AttendanceRepository;
+import com.hrms.repository.ClaimRepository;
 import com.hrms.repository.DepartmentRepository;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.LeaveRequestRepository;
@@ -33,6 +35,9 @@ public class DashboardService {
     @Autowired
     private OvertimeRequestRepository overtimeRequestRepository;
 
+    @Autowired
+    private ClaimRepository claimRepository;
+
     public DashboardStatsDto getDashboardStats() {
         DashboardStatsDto stats = new DashboardStatsDto();
         long totalEmployees = employeeRepository.count();
@@ -46,6 +51,8 @@ public class DashboardService {
 
         stats.setPendingLeaveCount(leaveRequestRepository.countByStatus(LeaveStatus.PENDING_SUPERVISOR));
         stats.setPendingOvertimeCount(overtimeRequestRepository.countByStatus(OvertimeStatus.PENDING_SUPERVISOR));
+        long pendingClaims = claimRepository.countByStatusIn(List.of(ClaimStatus.PENDING_SUPERVISOR, ClaimStatus.PENDING_HR));
+        stats.setPendingClaimCount(pendingClaims);
 
         // Employee attendance rate: today's attendance / total employees (0–100)
         if (totalEmployees > 0) {

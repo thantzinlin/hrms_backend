@@ -81,4 +81,22 @@ public class GlobalExceptionHandler {
                 e.getMessage());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<CustomApiResponse<String>> handleIllegalState(IllegalStateException e) {
+        CustomApiResponse<String> response = new CustomApiResponse<>(
+                ResponseConstants.BAD_REQUEST_ERROR_CODE,
+                ResponseConstants.BAD_REQUEST_ERROR_MESSAGE,
+                e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<CustomApiResponse<String>> handleIllegalArgument(IllegalArgumentException e) {
+        CustomApiResponse<String> response = new CustomApiResponse<>(
+                ResponseConstants.BAD_REQUEST_ERROR_CODE,
+                ResponseConstants.BAD_REQUEST_ERROR_MESSAGE,
+                e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 }

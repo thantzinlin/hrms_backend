@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -18,6 +19,14 @@ public class UpdateEmployeeRequest {
     private LocalDateTime joinDate;
 
     private String status;
+
+    private String fatherName;
+    private LocalDate dateOfBirth;
+    private String nationality;
+    private String race;
+    private String gender;
+    private String maritalStatus;
+    private String nrc;
 
     private Integer departmentId;
 

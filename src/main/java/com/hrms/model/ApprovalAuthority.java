@@ -28,6 +28,9 @@ public class ApprovalAuthority extends BaseEntity {
     @Column(name = "can_approve_overtime", nullable = false)
     private Boolean canApproveOvertime = false;
 
+    @Column(name = "can_approve_claim", nullable = false)
+    private Boolean canApproveClaim = false;
+
     @Column(name = "is_hr", nullable = false)
     private Boolean isHr = false;
 }

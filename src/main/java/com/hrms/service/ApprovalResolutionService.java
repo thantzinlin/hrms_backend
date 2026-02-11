@@ -33,9 +33,11 @@ public class ApprovalResolutionService {
         while (current != null) {
             Optional<ApprovalAuthority> auth = approvalAuthorityRepository.findByEmployee(current);
             if (auth.isPresent()) {
-                boolean canApprove = requestType == RequestType.LEAVE
-                        ? auth.get().getCanApproveLeave()
-                        : auth.get().getCanApproveOvertime();
+                boolean canApprove = switch (requestType) {
+                    case LEAVE -> auth.get().getCanApproveLeave();
+                    case OVERTIME -> auth.get().getCanApproveOvertime();
+                    case CLAIM -> auth.get().getCanApproveClaim();
+                };
                 if (Boolean.TRUE.equals(canApprove)) {
                     return Optional.of(current);
                 }
@@ -63,7 +65,11 @@ public class ApprovalResolutionService {
         if (employee == null)
             return false;
         return approvalAuthorityRepository.findByEmployee(employee)
-                .map(a -> requestType == RequestType.LEAVE ? a.getCanApproveLeave() : a.getCanApproveOvertime())
+                .map(a -> switch (requestType) {
+                    case LEAVE -> a.getCanApproveLeave();
+                    case OVERTIME -> a.getCanApproveOvertime();
+                    case CLAIM -> a.getCanApproveClaim();
+                })
                 .orElse(false);
     }
 

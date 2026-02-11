@@ -92,7 +92,7 @@ public class ApprovalController {
     private ApproveRejectRequest parseId(String id, ApproveRejectRequest body) {
         int dash = id.indexOf('-');
         if (dash <= 0 || dash == id.length() - 1) {
-            throw new IllegalArgumentException("Invalid approval id; expected format: LEAVE-1 or OVERTIME-2");
+            throw new IllegalArgumentException("Invalid approval id; expected format: LEAVE-1, OVERTIME-2, or CLAIM-3");
         }
         RequestType type = RequestType.valueOf(id.substring(0, dash));
         Long requestId = Long.parseLong(id.substring(dash + 1));

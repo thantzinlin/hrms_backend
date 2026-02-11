@@ -9,6 +9,7 @@ public class DashboardStatsDto {
     private Long todayAttendanceCount;
     private Long pendingLeaveCount;
     private Long pendingOvertimeCount;
+    private Long pendingClaimCount = 0L;
     /** Employee attendance rate (0-100): today's attendance / total employees. */
     private Double employeeAttendanceRate;
     /** Leave approval rate (0-100): approved leaves / total leave requests. */

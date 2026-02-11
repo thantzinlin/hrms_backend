@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -25,6 +26,21 @@ public class CreateEmployeeRequest {
 
     @NotBlank
     private String status;
+
+    @NotBlank
+    private String fatherName;
+    @NotNull
+    private LocalDate dateOfBirth;
+    @NotBlank
+    private String nationality;
+    @NotBlank
+    private String race;
+    @NotBlank
+    private String gender;
+    @NotBlank
+    private String maritalStatus;
+    @NotBlank
+    private String nrc;
 
     @NotBlank
     private String username;
