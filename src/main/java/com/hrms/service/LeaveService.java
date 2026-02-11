@@ -7,9 +7,14 @@ import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.model.Employee;
 import com.hrms.model.LeaveRequest;
 import com.hrms.model.LeaveStatus;
+import com.hrms.model.LeaveType;
+import com.hrms.model.RequestType;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.LeaveRequestRepository;
+import com.hrms.repository.LeaveTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,26 +31,44 @@ public class LeaveService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private LeaveTypeRepository leaveTypeRepository;
+
+    @Autowired
+    private ApprovalResolutionService approvalResolutionService;
+
     @Transactional
     public LeaveRequestDto createLeaveRequest(CreateLeaveRequest request) {
         Employee employee = employeeRepository.findByEmployeeId(request.getEmployeeId())
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Employee not found with id: " + request.getEmployeeId()));
 
+        LeaveType leaveType = leaveTypeRepository.findById(request.getLeaveTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Leave type not found with id: " + request.getLeaveTypeId()));
+
         LeaveRequest leaveRequest = new LeaveRequest();
         leaveRequest.setEmployee(employee);
         leaveRequest.setStartDate(request.getStartDate());
         leaveRequest.setEndDate(request.getEndDate());
         leaveRequest.setReason(request.getReason());
-        leaveRequest.setLeaveType(request.getLeaveType());
+        leaveRequest.setLeaveType(leaveType);
         leaveRequest.setStatus(LeaveStatus.PENDING_SUPERVISOR);
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
+
+        if (approvalResolutionService.resolveSupervisorApprover(employee, RequestType.LEAVE).isEmpty()) {
+            savedRequest.setStatus(LeaveStatus.PENDING_HR);
+            savedRequest = leaveRequestRepository.save(savedRequest);
+        }
         return mapToDto(savedRequest);
     }
 
     public List<LeaveRequestDto> getAllLeaveRequests() {
         return leaveRequestRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public Page<LeaveRequestDto> getAllLeaveRequests(Pageable pageable) {
+        return leaveRequestRepository.findAll(pageable).map(this::mapToDto);
     }
 
     public LeaveRequestDto getLeaveRequestById(Long id) {
@@ -72,10 +95,22 @@ public class LeaveService {
                 .map(this::mapToDto).collect(Collectors.toList());
     }
 
+    public Page<LeaveRequestDto> getLeaveRequestsByEmployee(String employeeId, Pageable pageable) {
+        Employee employee = employeeRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
+        return leaveRequestRepository.findByEmployee(employee, pageable).map(this::mapToDto);
+    }
+
     public List<LeaveRequestDto> getPendingLeaveRequests() {
         return leaveRequestRepository.findByStatusIn(java.util.List.of(
                 LeaveStatus.PENDING_SUPERVISOR, LeaveStatus.PENDING_HR)).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public Page<LeaveRequestDto> getPendingLeaveRequests(Pageable pageable) {
+        return leaveRequestRepository.findByStatusIn(
+                java.util.List.of(LeaveStatus.PENDING_SUPERVISOR, LeaveStatus.PENDING_HR), pageable)
+                .map(this::mapToDto);
     }
 
     public long calculateLeaveDays(Long id) {
@@ -93,7 +128,11 @@ public class LeaveService {
         dto.setEndDate(leaveRequest.getEndDate());
         dto.setReason(leaveRequest.getReason());
         dto.setStatus(leaveRequest.getStatus());
-        dto.setLeaveType(leaveRequest.getLeaveType());
+        if (leaveRequest.getLeaveType() != null) {
+            dto.setLeaveTypeId(leaveRequest.getLeaveType().getId());
+            dto.setLeaveTypeCode(leaveRequest.getLeaveType().getCode());
+            dto.setLeaveTypeName(leaveRequest.getLeaveType().getName());
+        }
         return dto;
     }
 }

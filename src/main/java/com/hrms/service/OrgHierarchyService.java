@@ -40,11 +40,13 @@ public class OrgHierarchyService {
         List<HierarchyNodeDto> subDtos = subs.stream()
                 .map(sub -> buildNode(sub, byManager))
                 .collect(Collectors.toList());
+        String positionName = e.getJobPosition() != null ? e.getJobPosition().getPositionName() : null;
         return HierarchyNodeDto.builder()
                 .id(e.getId())
                 .employeeId(e.getEmployeeId())
                 .name(e.getName())
                 .email(e.getEmail())
+                .positionName(positionName)
                 .reportingToId(e.getReportingTo() != null ? e.getReportingTo().getId() : null)
                 .subordinates(subDtos)
                 .build();

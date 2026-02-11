@@ -6,6 +6,8 @@ import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.model.Department;
 import com.hrms.repository.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,10 @@ public class DepartmentService {
 
     public List<DepartmentDto> getAllDepartments() {
         return departmentRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public Page<DepartmentDto> getAllDepartments(Pageable pageable) {
+        return departmentRepository.findAll(pageable).map(this::mapToDto);
     }
 
     public DepartmentDto getDepartmentById(Integer id) {

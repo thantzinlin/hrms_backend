@@ -1,6 +1,5 @@
 package com.hrms.dto;
 
-import com.hrms.model.LeaveType;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,5 +22,5 @@ public class CreateLeaveRequest {
     private String reason;
 
     @NotNull
-    private LeaveType leaveType;
+    private Long leaveTypeId;
 }

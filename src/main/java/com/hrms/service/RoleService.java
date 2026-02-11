@@ -9,6 +9,8 @@ import com.hrms.model.Menu;
 import com.hrms.model.Role;
 import com.hrms.repository.MenuRepository;
 import com.hrms.repository.RoleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,6 +50,11 @@ public class RoleService {
         return roleRepository.findAll().stream()
                 .map(this::mapToDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RoleDto> getRolesPage(Pageable pageable) {
+        return roleRepository.findAll(pageable).map(this::mapToDto);
     }
 
     @Transactional(readOnly = true)

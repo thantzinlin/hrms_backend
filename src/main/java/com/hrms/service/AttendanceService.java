@@ -9,6 +9,8 @@ import com.hrms.model.Employee;
 import com.hrms.repository.AttendanceRepository;
 import com.hrms.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,6 +76,14 @@ public class AttendanceService {
         List<Attendance> attendanceList = attendanceRepository.findByEmployeeAndDateBetween(employee, startDate,
                 endDate);
         return attendanceList.stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public Page<AttendanceDto> getAttendanceByEmployeeAndDateRange(String employeeId, LocalDate startDate,
+            LocalDate endDate, Pageable pageable) {
+        Employee employee = employeeRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
+        return attendanceRepository.findByEmployeeAndDateBetween(employee, startDate, endDate, pageable)
+                .map(this::mapToDto);
     }
 
     public List<AttendanceDto> getAttendanceByDate(LocalDate date) {

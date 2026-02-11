@@ -1,7 +1,6 @@
 package com.hrms.dto;
 
 import com.hrms.model.LeaveStatus;
-import com.hrms.model.LeaveType;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -15,5 +14,7 @@ public class LeaveRequestDto {
     private LocalDate endDate;
     private String reason;
     private LeaveStatus status;
-    private LeaveType leaveType;
+    private Long leaveTypeId;
+    private String leaveTypeCode;
+    private String leaveTypeName;
 }

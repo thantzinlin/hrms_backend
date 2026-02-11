@@ -35,7 +35,7 @@ public class LeaveRequest extends BaseEntity {
     @Column(nullable = false, length = 20)
     private LeaveStatus status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
+    @ManyToOne
+    @JoinColumn(name = "leave_type_id", nullable = false)
     private LeaveType leaveType;
 }

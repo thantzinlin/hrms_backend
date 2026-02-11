@@ -7,9 +7,12 @@ import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.model.Employee;
 import com.hrms.model.OvertimeRequest;
 import com.hrms.model.OvertimeStatus;
+import com.hrms.model.RequestType;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.OvertimeRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,9 @@ public class OvertimeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private ApprovalResolutionService approvalResolutionService;
+
     @Transactional
     public OvertimeRequestDto createOvertimeRequest(CreateOvertimeRequest request) {
         Employee employee = employeeRepository.findByEmployeeId(request.getEmployeeId())
@@ -39,11 +45,20 @@ public class OvertimeService {
         overtimeRequest.setStatus(OvertimeStatus.PENDING_SUPERVISOR);
 
         OvertimeRequest savedRequest = overtimeRequestRepository.save(overtimeRequest);
+
+        if (approvalResolutionService.resolveSupervisorApprover(employee, RequestType.OVERTIME).isEmpty()) {
+            savedRequest.setStatus(OvertimeStatus.PENDING_HR);
+            savedRequest = overtimeRequestRepository.save(savedRequest);
+        }
         return mapToDto(savedRequest);
     }
 
     public List<OvertimeRequestDto> getAllOvertimeRequests() {
         return overtimeRequestRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public Page<OvertimeRequestDto> getAllOvertimeRequests(Pageable pageable) {
+        return overtimeRequestRepository.findAll(pageable).map(this::mapToDto);
     }
 
     public OvertimeRequestDto getOvertimeRequestById(Long id) {
@@ -70,10 +85,22 @@ public class OvertimeService {
                 .map(this::mapToDto).collect(Collectors.toList());
     }
 
+    public Page<OvertimeRequestDto> getOvertimeRequestsByEmployee(String employeeId, Pageable pageable) {
+        Employee employee = employeeRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with employeeId: " + employeeId));
+        return overtimeRequestRepository.findByEmployee(employee, pageable).map(this::mapToDto);
+    }
+
     public List<OvertimeRequestDto> getPendingOvertimeRequests() {
         return overtimeRequestRepository.findByStatusIn(java.util.List.of(
                 OvertimeStatus.PENDING_SUPERVISOR, OvertimeStatus.PENDING_HR)).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public Page<OvertimeRequestDto> getPendingOvertimeRequests(Pageable pageable) {
+        return overtimeRequestRepository.findByStatusIn(
+                java.util.List.of(OvertimeStatus.PENDING_SUPERVISOR, OvertimeStatus.PENDING_HR), pageable)
+                .map(this::mapToDto);
     }
 
     private OvertimeRequestDto mapToDto(OvertimeRequest overtimeRequest) {

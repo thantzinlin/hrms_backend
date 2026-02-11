@@ -16,6 +16,8 @@ public class HierarchyNodeDto {
     private String employeeId;
     private String name;
     private String email;
+    /** Display label for hierarchy (e.g. position name). */
+    private String positionName;
     private Long reportingToId;
     private List<HierarchyNodeDto> subordinates;
 }

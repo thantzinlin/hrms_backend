@@ -7,6 +7,8 @@ import com.hrms.service.OvertimeService;
 import com.hrms.util.CustomApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,9 +35,9 @@ public class OvertimeController {
 
     @GetMapping
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
-    public ResponseEntity<CustomApiResponse<List<OvertimeRequestDto>>> getAllOvertimeRequests() {
-        List<OvertimeRequestDto> requests = overtimeService.getAllOvertimeRequests();
-        return ResponseEntity.ok(CustomApiResponse.<List<OvertimeRequestDto>>builder().data(requests).build());
+    public ResponseEntity<CustomApiResponse<Page<OvertimeRequestDto>>> getAllOvertimeRequests(Pageable pageable) {
+        Page<OvertimeRequestDto> requests = overtimeService.getAllOvertimeRequests(pageable);
+        return ResponseEntity.ok(CustomApiResponse.<Page<OvertimeRequestDto>>builder().data(requests).build());
     }
 
     @GetMapping("/{id}")
@@ -57,16 +59,17 @@ public class OvertimeController {
     @GetMapping("/employee/{employeeId}")
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER') or
     // hasRole('EMPLOYEE')")
-    public ResponseEntity<CustomApiResponse<List<OvertimeRequestDto>>> getOvertimeRequestsByEmployee(
-            @PathVariable String employeeId) {
-        List<OvertimeRequestDto> requests = overtimeService.getOvertimeRequestsByEmployee(employeeId);
-        return ResponseEntity.ok(CustomApiResponse.<List<OvertimeRequestDto>>builder().data(requests).build());
+    public ResponseEntity<CustomApiResponse<Page<OvertimeRequestDto>>> getOvertimeRequestsByEmployee(
+            @PathVariable String employeeId,
+            Pageable pageable) {
+        Page<OvertimeRequestDto> requests = overtimeService.getOvertimeRequestsByEmployee(employeeId, pageable);
+        return ResponseEntity.ok(CustomApiResponse.<Page<OvertimeRequestDto>>builder().data(requests).build());
     }
 
     @GetMapping("/pending")
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
-    public ResponseEntity<CustomApiResponse<List<OvertimeRequestDto>>> getPendingOvertimeRequests() {
-        List<OvertimeRequestDto> requests = overtimeService.getPendingOvertimeRequests();
-        return ResponseEntity.ok(CustomApiResponse.<List<OvertimeRequestDto>>builder().data(requests).build());
+    public ResponseEntity<CustomApiResponse<Page<OvertimeRequestDto>>> getPendingOvertimeRequests(Pageable pageable) {
+        Page<OvertimeRequestDto> requests = overtimeService.getPendingOvertimeRequests(pageable);
+        return ResponseEntity.ok(CustomApiResponse.<Page<OvertimeRequestDto>>builder().data(requests).build());
     }
 }

@@ -6,6 +6,8 @@ import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.model.Holiday;
 import com.hrms.repository.HolidayRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,10 @@ public class HolidayService {
 
     public List<HolidayDto> getAllHolidays() {
         return holidayRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public Page<HolidayDto> getHolidaysPage(Pageable pageable) {
+        return holidayRepository.findAll(pageable).map(this::mapToDto);
     }
 
     public HolidayDto getHolidayById(Integer id) {

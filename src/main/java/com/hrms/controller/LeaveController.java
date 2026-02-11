@@ -2,11 +2,15 @@ package com.hrms.controller;
 
 import com.hrms.dto.CreateLeaveRequest;
 import com.hrms.dto.LeaveRequestDto;
+import com.hrms.dto.LeaveTypeDto;
 import com.hrms.dto.UpdateLeaveRequestStatus;
 import com.hrms.service.LeaveService;
+import com.hrms.service.LeaveTypeService;
 import com.hrms.util.CustomApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +25,15 @@ public class LeaveController {
     @Autowired
     private LeaveService leaveService;
 
+    @Autowired
+    private LeaveTypeService leaveTypeService;
+
+    @GetMapping("/types")
+    public ResponseEntity<CustomApiResponse<List<LeaveTypeDto>>> getActiveLeaveTypes() {
+        List<LeaveTypeDto> types = leaveTypeService.getActive();
+        return ResponseEntity.ok(CustomApiResponse.<List<LeaveTypeDto>>builder().data(types).build());
+    }
+
     @PostMapping
     // @PreAuthorize("hasRole('EMPLOYEE') or hasRole('MANAGER') or hasRole('HR') or
     // hasRole('ADMIN')")
@@ -33,9 +46,9 @@ public class LeaveController {
 
     @GetMapping
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
-    public ResponseEntity<CustomApiResponse<List<LeaveRequestDto>>> getAllLeaveRequests() {
-        List<LeaveRequestDto> requests = leaveService.getAllLeaveRequests();
-        return ResponseEntity.ok(CustomApiResponse.<List<LeaveRequestDto>>builder().data(requests).build());
+    public ResponseEntity<CustomApiResponse<Page<LeaveRequestDto>>> getAllLeaveRequests(Pageable pageable) {
+        Page<LeaveRequestDto> requests = leaveService.getAllLeaveRequests(pageable);
+        return ResponseEntity.ok(CustomApiResponse.<Page<LeaveRequestDto>>builder().data(requests).build());
     }
 
     @GetMapping("/{id}")
@@ -57,17 +70,18 @@ public class LeaveController {
     @GetMapping("/employee/{employeeId}")
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER') or
     // hasRole('EMPLOYEE')")
-    public ResponseEntity<CustomApiResponse<List<LeaveRequestDto>>> getLeaveRequestsByEmployee(
-            @PathVariable String employeeId) {
-        List<LeaveRequestDto> requests = leaveService.getLeaveRequestsByEmployee(employeeId);
-        return ResponseEntity.ok(CustomApiResponse.<List<LeaveRequestDto>>builder().data(requests).build());
+    public ResponseEntity<CustomApiResponse<Page<LeaveRequestDto>>> getLeaveRequestsByEmployee(
+            @PathVariable String employeeId,
+            Pageable pageable) {
+        Page<LeaveRequestDto> requests = leaveService.getLeaveRequestsByEmployee(employeeId, pageable);
+        return ResponseEntity.ok(CustomApiResponse.<Page<LeaveRequestDto>>builder().data(requests).build());
     }
 
     @GetMapping("/pending")
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
-    public ResponseEntity<CustomApiResponse<List<LeaveRequestDto>>> getPendingLeaveRequests() {
-        List<LeaveRequestDto> requests = leaveService.getPendingLeaveRequests();
-        return ResponseEntity.ok(CustomApiResponse.<List<LeaveRequestDto>>builder().data(requests).build());
+    public ResponseEntity<CustomApiResponse<Page<LeaveRequestDto>>> getPendingLeaveRequests(Pageable pageable) {
+        Page<LeaveRequestDto> requests = leaveService.getPendingLeaveRequests(pageable);
+        return ResponseEntity.ok(CustomApiResponse.<Page<LeaveRequestDto>>builder().data(requests).build());
     }
 
     @GetMapping("/{id}/calculate-days")

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,6 +94,11 @@ public class MenuService {
                 .stream()
                 .map(this::mapToAdminDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MenuAdminDto> getMenusPage(Pageable pageable) {
+        return menuRepository.findByIsDeletedFalse(pageable).map(this::mapToAdminDto);
     }
 
     private MenuAdminDto mapToAdminDto(Menu menu) {

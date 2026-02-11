@@ -5,6 +5,8 @@ import com.hrms.dto.PositionDto;
 import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.model.Position;
 import com.hrms.repository.PositionRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,10 @@ public class PositionService {
         return positionRepository.findAll().stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+    public Page<PositionDto> getPage(Pageable pageable) {
+        return positionRepository.findAll(pageable).map(this::mapToDto);
     }
 
     public PositionDto getById(Long id) {

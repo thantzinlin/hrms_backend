@@ -6,6 +6,8 @@ import com.hrms.dto.CheckOutRequest;
 import com.hrms.service.AttendanceService;
 import com.hrms.util.CustomApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,13 +42,14 @@ public class AttendanceController {
 
     @GetMapping("/report/employee/{employeeId}")
     // @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('MANAGER')")
-    public ResponseEntity<CustomApiResponse<List<AttendanceDto>>> getAttendanceByEmployeeAndDateRange(
+    public ResponseEntity<CustomApiResponse<Page<AttendanceDto>>> getAttendanceByEmployeeAndDateRange(
             @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        List<AttendanceDto> report = attendanceService.getAttendanceByEmployeeAndDateRange(employeeId, startDate,
-                endDate);
-        return ResponseEntity.ok(CustomApiResponse.<List<AttendanceDto>>builder().data(report).build());
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Pageable pageable) {
+        Page<AttendanceDto> report = attendanceService.getAttendanceByEmployeeAndDateRange(employeeId, startDate,
+                endDate, pageable);
+        return ResponseEntity.ok(CustomApiResponse.<Page<AttendanceDto>>builder().data(report).build());
     }
 
     @GetMapping("/report/date/{date}")

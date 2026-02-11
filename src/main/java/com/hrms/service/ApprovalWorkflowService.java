@@ -214,7 +214,7 @@ public class ApprovalWorkflowService {
                 .startDate(lr.getStartDate())
                 .endDate(lr.getEndDate())
                 .reason(lr.getReason())
-                .leaveType(lr.getLeaveType() != null ? lr.getLeaveType().name() : null)
+                .leaveType(lr.getLeaveType() != null ? lr.getLeaveType().getName() : null)
                 .build();
     }
 
