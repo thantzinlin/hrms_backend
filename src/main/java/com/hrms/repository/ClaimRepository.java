@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,4 +44,10 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
     Optional<Long> findMaxId();
 
     long countByClaimTypeId(Long claimTypeId);
+
+    @Query("SELECT c FROM Claim c JOIN FETCH c.employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH c.claimType WHERE c.claimDate BETWEEN :startDate AND :endDate")
+    List<Claim> findByClaimDateBetweenWithEmployeeAndClaimType(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT c FROM Claim c JOIN FETCH c.employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH c.claimType WHERE e.department.id = :departmentId AND c.claimDate BETWEEN :startDate AND :endDate")
+    List<Claim> findByDepartmentAndClaimDateBetween(@Param("departmentId") Integer departmentId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

@@ -29,4 +29,12 @@ public interface OvertimeRequestRepository extends JpaRepository<OvertimeRequest
 
     /** Check for duplicate overtime: same employee, same date, status in PENDING or APPROVED. */
     boolean existsByEmployeeAndDateAndStatusIn(Employee employee, LocalDate date, Collection<OvertimeStatus> statuses);
+
+    List<OvertimeRequest> findByDateBetween(LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT or FROM OvertimeRequest or JOIN FETCH or.employee e LEFT JOIN FETCH e.department WHERE or.date BETWEEN :startDate AND :endDate")
+    List<OvertimeRequest> findByDateBetweenWithEmployee(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT or FROM OvertimeRequest or JOIN FETCH or.employee e LEFT JOIN FETCH e.department WHERE e.department.id = :departmentId AND or.date BETWEEN :startDate AND :endDate")
+    List<OvertimeRequest> findByDepartmentAndDateBetween(@Param("departmentId") Integer departmentId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

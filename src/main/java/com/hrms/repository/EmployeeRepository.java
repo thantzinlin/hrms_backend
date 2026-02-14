@@ -31,4 +31,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "(e.phone IS NOT NULL AND LOWER(e.phone) LIKE LOWER(CONCAT('%', :search, '%'))))")
     Page<Employee> searchByEmployeeIdOrNameOrEmailOrPhone(@Param("search") String search, Pageable pageable);
 
+    List<Employee> findByDepartment_Id(Integer departmentId);
+
 }

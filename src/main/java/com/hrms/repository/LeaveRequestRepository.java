@@ -29,6 +29,14 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
 
     long countByLeaveTypeId(Long leaveTypeId);
 
+    List<LeaveRequest> findByStartDateBetween(LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT lr FROM LeaveRequest lr JOIN FETCH lr.employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH lr.leaveType WHERE lr.startDate BETWEEN :startDate AND :endDate")
+    List<LeaveRequest> findByStartDateBetweenWithEmployeeAndLeaveType(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT lr FROM LeaveRequest lr JOIN FETCH lr.employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH lr.leaveType WHERE e.department.id = :departmentId AND lr.startDate BETWEEN :startDate AND :endDate")
+    List<LeaveRequest> findByDepartmentAndStartDateBetween(@Param("departmentId") Integer departmentId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
     /**
      * Find overlapping leave requests for an employee (PENDING or APPROVED only).
      * Overlap: newStart <= existingEnd AND newEnd >= existingStart
